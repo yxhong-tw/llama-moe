@@ -1,7 +1,6 @@
 import warnings
 
 import torch
-from deepspeed.moe.sharded_moe import gumbel_rsample
 from torch import nn
 from torch.distributions.normal import Normal
 
@@ -187,6 +186,8 @@ class RandomLearnableGate(BaseGate):
         self.noise_epsilon = noise_epsilon
 
     def forward(self, x):
+        from deepspeed.moe.sharded_moe import gumbel_rsample
+
         logits = self.gate_network(x)  # gate计算出的权重
         gumbel_rsample(logits.shape, device=logits.device).to(
             logits

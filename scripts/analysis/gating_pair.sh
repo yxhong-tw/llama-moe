@@ -1,14 +1,16 @@
 #!/usr/bin/bash
 
-model_path=/mnt/petrelfs/share_data/quxiaoye/models/llama-moe-models/LLaMA-MoE-v1-3_0B-2_16
 validation_dir=/mnt/petrelfs/share_data/quxiaoye/data/llama1_7B_val_set_tokenized
 batch_size=4
-save_path=/mnt/petrelfs/dongdaize.d/workspace/train-moe/analysis/
 
 gpus=1
 cpus=16
-quotatype=auto # auto spot reserved
-OMP_NUM_THREADS=2 srun --partition=MoE --job-name="☝☝☝" --mpi=pmi2 --gres=gpu:${gpus} -n1 --ntasks-per-node=1 -c ${cpus} --kill-on-bad-exit=1 --quotatype=${quotatype} \
+quotatype=reserved # auto spot reserved
+
+model_path=/mnt/petrelfs/share_data/quxiaoye/models/llama-moe-models/LLaMA-MoE-v1-3_0B-2_16
+save_path=/mnt/petrelfs/dongdaize.d/workspace/llama-moe/visualization/gating-pair/2_16
+
+OMP_NUM_THREADS=4 srun --partition=MoE --job-name=vis --mpi=pmi2 --gres=gpu:${gpus} -n1 --ntasks-per-node=1 -c ${cpus} --kill-on-bad-exit=1 --quotatype=${quotatype} \
   python -m smoe.entrypoint.analysis.gating_pair \
   --model_path ${model_path} \
   --validation_dir ${validation_dir} \

@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 import sys
 from pathlib import Path
 
@@ -34,6 +35,9 @@ def main(args):
     print(f"{len(eval_dataset)}")
     print(eval_dataset[0])
 
+    random.seed(0)
+    random.shuffle(eval_dataset)
+
     dataloader = DataLoader(eval_dataset, batch_size=args.batch_size, num_workers=4)
 
     """model"""
@@ -48,36 +52,45 @@ def main(args):
             sys.stderr.flush()
             move_tensors_to_device(batch, "cuda")
             model(**batch)
-            if i >= 100:
+            if i >= 2000:
                 break
 
     """aggregate"""
     all_records = {}
     for layer_idx, layer in enumerate(
-            model.model.layers
+        model.model.layers
     ):  # locate block by the name template
         all_records[layer_idx] = np.zeros(
-            model.config.num_experts, model.config.num_experts
+            (model.config.num_experts, model.config.num_experts)
         )
         for pair in tqdm(
-                layer.mlp.gate.load_record,
-                desc=f"aggregating results for layer {layer_idx}",
+            layer.mlp.gate.load_record,
+            desc=f"aggregating results for layer {layer_idx}",
         ):
             sys.stderr.flush()
             all_records[layer_idx][pair[0], pair[1]] += 1
 
-    """save"""
-    for layer_id, data in all_records.items():
+    """save raw"""
+    save_raw_pair_path = os.path.join(args.save_path, "raw_pair")
+    if not os.path.exists(save_raw_pair_path):
+        os.makedirs(save_raw_pair_path)
+
+    for layer_idx, data in all_records.items():
         cmap = matplotlib.colormaps["OrRd"]
         fig = plt.figure()
         ax = fig.add_subplot(111)
         im = ax.imshow(data, cmap=cmap, interpolation="nearest")
-        # im = ax.imshow(data, cmap=cmap, interpolation="nearest", vmin=3500, vmax=4500)
 
         for i in range(model.config.num_experts):
             for j in range(model.config.num_experts):
                 ax.text(
-                    j, i, f"{data[i, j]:.0f}", ha="center", va="center", color="black"
+                    j,
+                    i,
+                    f"{data[i, j]:.0f}",
+                    ha="center",
+                    va="center",
+                    color="black",
+                    fontsize=3,
                 )
 
         ax.set_title(f"Layer {layer_idx}")
@@ -85,11 +98,52 @@ def main(args):
         fig.colorbar(im)
         fig.tight_layout()
 
-        save_file = os.path.join(args.save_path, f"layer{layer_id}.png")
+        save_file = os.path.join(save_raw_pair_path, f"layer{layer_idx}.png")
         fig.savefig(save_file, dpi=320, bbox_inches="tight")
         compress_png_image(save_file, print_info=False)
+        plt.close(fig)
 
-    # torch.save(all_records, os.path.join(args.save_path, "records.pt"))
+    torch.save(all_records, os.path.join(save_raw_pair_path, "records.pt"))
+
+    """save aggregated"""
+    save_aggregate_pair_path = os.path.join(args.save_path, "aggregate_pair")
+    if not os.path.exists(save_aggregate_pair_path):
+        os.makedirs(save_aggregate_pair_path)
+
+    for layer_idx in all_records.keys():
+        ######################################
+        all_records[layer_idx] += all_records[layer_idx].transpose()
+        data = all_records[layer_idx]
+        ######################################
+
+        cmap = matplotlib.colormaps["OrRd"]
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        im = ax.imshow(data, cmap=cmap, interpolation="nearest")
+
+        for i in range(model.config.num_experts):
+            for j in range(model.config.num_experts):
+                ax.text(
+                    j,
+                    i,
+                    f"{data[i, j]:.0f}",
+                    ha="center",
+                    va="center",
+                    color="black",
+                    fontsize=4,
+                )
+
+        ax.set_title(f"Layer {layer_idx}")
+        ax.set_axis_off()
+        fig.colorbar(im)
+        fig.tight_layout()
+
+        save_file = os.path.join(save_aggregate_pair_path, f"layer{layer_idx}.png")
+        fig.savefig(save_file, dpi=320, bbox_inches="tight")
+        compress_png_image(save_file, print_info=False)
+        plt.close(fig)
+
+    torch.save(all_records, os.path.join(save_aggregate_pair_path, "records.pt"))
 
 
 if __name__ == "__main__":

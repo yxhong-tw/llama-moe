@@ -11,7 +11,7 @@ data_path=/mnt/petrelfs/share_data/quxiaoye
 model_path=${data_path}/models/${llama_size}
 hidden_features_path=${data_path}/moefication_results/features/${llama_size}-Hidden-Features
 
-save_path=/mnt/petrelfs/dongdaize.d/workspace/train-moe/visualization/swiglu-output/${llama_size}/${proj_type}-${visualize_criterion}
+save_path=/mnt/petrelfs/dongdaize.d/workspace/llama-moe/visualization/swiglu-output/${llama_size}/${proj_type}-${visualize_criterion}
 
 gpus=1
 cpus=16
