@@ -89,19 +89,19 @@ softmax_list = []
 
 
 def gate_recording_forward(self, x):
-    """先计算所有专家的权重值"""
-    logits_gate = self.gate_network(x)  # gate计算出的权重
-    logits = logits_gate  # 最终权重，shape(batch_size, num_experts)
+    """First calculate the weights of all experts"""
+    logits_gate = self.gate_network(x)  # Weights calculated by the gate
+    logits = logits_gate  # Final weights, shape(batch_size, num_experts)
 
-    """选出前k个权重，并计算各个专家的分数scores"""
+    """Select the top k weights and calculate the scores for each expert"""
     top_logits, top_indices = logits.topk(
         min(self.num_selects + 1, self.num_experts), dim=1
-    )  # 选择并排序前k+1个权重
+    )  # Select and sort the top k+1 weights
     top_k_logits = top_logits[:, : self.num_selects]
     top_k_indices = top_indices[:, : self.num_selects]
     top_k_scores = self.softmax(top_k_logits)
 
-    """计算importance"""
+    """Calculate importance"""
     zeros = torch.zeros_like(logits, requires_grad=True, device=logits.device)
     scores_filtered = zeros.scatter(
         dim=1, index=top_k_indices, src=top_k_scores
@@ -109,10 +109,10 @@ def gate_recording_forward(self, x):
     softmax_list.append(scores_filtered.detach().cpu())
     importance = scores_filtered.sum(0)  # shape(num_experts)
 
-    """计算load"""
+    """Calculate load"""
     load = (scores_filtered > 0).sum(0)
 
-    """计算balance loss"""
+    """Calculate balance loss"""
     if self.use_balance:
         balance_loss = self.cv_squared(importance) + self.cv_squared(load)
         balance_loss *= self.balance_loss_weight
