@@ -29,7 +29,10 @@ def main(args):
             for ins in load_jsonlines_iter(file):
                 contents.append(ins["content"])
 
-        model = TextClustering(num_clusters=args.num_clusters)
+        model = TextClustering(
+            num_clusters=args.num_clusters,
+            device=args.device,
+        )
         logger.info("Fitting model")
         model.fit(contents)
         logger.info("Saving model")
@@ -37,7 +40,10 @@ def main(args):
 
     if args.do_eval:
         logger.info("Loading model")
-        model = TextClustering.from_pretrained(args.model_dir)
+        model = TextClustering.from_pretrained(
+            folder=args.model_dir,
+            device=args.device,
+        )
 
         logger.info("Loading contents")
         num_tot = 0
@@ -111,6 +117,11 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output_dir", type=str)
     parser.add_argument("-n", "--num_clusters", type=int, default=16)
     parser.add_argument("-m", "--model_dir", type=str)
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cpu",
+    )
     args = parser.parse_args()
 
     main(args)

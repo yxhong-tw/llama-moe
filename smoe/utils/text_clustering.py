@@ -10,17 +10,31 @@ from smoe.utils.vars import CLUSTERING_MODEL_NAME
 
 class TextClustering:
     def __init__(
-        self, num_clusters: int = 16, encoder: str = "all-mpnet-base-v2"
+            self,
+            num_clusters: int = 16,
+            encoder: str = 'all-mpnet-base-v2',
+            device: str = 'cpu',
     ) -> None:
-        self.kmeans = KMeans(n_clusters=num_clusters)
-        self.emb = SentenceTransformer(encoder)
+        self.kmeans = KMeans(
+            n_clusters=num_clusters,
+            verbose=1,
+        )
+        self.emb = SentenceTransformer(
+            model_name_or_path=encoder,
+            device=device,
+        )
+        self.device = device
 
     @property
     def num_clusters(self) -> int:
         return self.kmeans.n_clusters
 
     def encode_emb(self, sentences: list[str]) -> np.ndarray:
-        arr: np.ndarray = self.emb.encode(sentences=sentences, show_progress_bar=False)
+        arr: np.ndarray = self.emb.encode(
+            sentences=sentences,
+            show_progress_bar=True,
+            device=self.device,
+        )
         return arr
 
     def fit_emb(self, emb: np.ndarray):
@@ -43,9 +57,10 @@ class TextClustering:
         joblib.dump(self.kmeans, model_path)
 
     @classmethod
-    def from_pretrained(cls, folder: str):
+    def from_pretrained(cls, folder: str, device: str = 'cpu'):
         model_path = Path(folder) / CLUSTERING_MODEL_NAME
         kmeans = joblib.load(model_path)
         model = cls()
         model.kmeans = kmeans
+        model.device = device
         return model
