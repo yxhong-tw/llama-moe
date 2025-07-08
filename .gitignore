@@ -176,3 +176,8 @@ smoe/entrypoint/analysis/gating_*.py
 /logs-cpt/
 /tensorboard/
 models/
+
+SlimPajama-6B-train-0.01
+SlimPajama-6B-train-0.01-clustering-model
+SlimPajama-6B-train-0.01-processed
+SlimPajama-6B-train-0.01-processed-tokenized

@@ -31,7 +31,7 @@ setuptools.setup(
         "omegaconf==2.0.6",
         "tqdm==4.65.0",
         "datasets==2.14.7",
-        "transformers==4.31.0",
+        "transformers==4.47.0",
         "peft==0.4.0",
         "tensorboard==2.13.0",
     ],

@@ -3,7 +3,7 @@
 llama_size="Llama-2-7b-hf"
 
 # True, False
-share_neurons=True
+share_neurons=False
 num_experts=3
 num_experts_residual=1
 num_selects=1

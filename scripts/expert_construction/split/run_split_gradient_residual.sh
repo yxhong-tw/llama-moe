@@ -3,7 +3,7 @@
 llama_size="Llama-2-7b-hf"
 
 # True, False
-share_neurons=True
+share_neurons=False
 expert_num_moe=3
 expert_num_residual=1
 total_expert_num=$((${expert_num_moe} + ${expert_num_residual}))

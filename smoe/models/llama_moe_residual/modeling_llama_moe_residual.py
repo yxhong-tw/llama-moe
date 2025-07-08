@@ -21,7 +21,7 @@ _CONFIG_FOR_DOC = "LlamaMoEResidualConfig"
 
 class LlamaMoEResidualDecoderLayer(LlamaMoEDecoderLayer):
     def __init__(self, config: LlamaMoEResidualConfig, layer_index):
-        super(LlamaMoEDecoderLayer, self).__init__(config)
+        super(LlamaMoEDecoderLayer, self).__init__(config, layer_index)
         assert config.intermediate_size == (
             config.intermediate_size_moe + config.intermediate_size_residual
         )
